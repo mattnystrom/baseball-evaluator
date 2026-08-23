@@ -2,6 +2,8 @@
 
 A self-contained browser app for recording fall-ball player evaluations. Data is stored locally in the browser and can be exported as CSV or backed up as JSON.
 
+Features include a mobile-friendly sprint stopwatch with separate Home-to-1B and Home-to-2B attempt histories, automatic best-time tracking, and a ball/strike pitch counter with undo and reset controls.
+
 ## Run locally
 
 Open `index.html` in a browser, or serve this directory with any static web server.

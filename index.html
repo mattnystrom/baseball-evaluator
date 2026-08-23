@@ -87,6 +87,39 @@
     }
     .chip.on{background:var(--accent-soft)}
     .twocol{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .tool-box{border:1px solid var(--border);background:var(--chip);border-radius:13px;padding:12px}
+    .route-toggle{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+    .route-btn{
+      min-height:46px;border:1px solid var(--border);border-radius:10px;background:var(--card);
+      color:var(--text);font-weight:850;
+    }
+    .route-btn.on{background:var(--accent-soft);border-color:transparent}
+    .timer-display{
+      padding:13px 0 11px;text-align:center;font-size:46px;font-weight:900;line-height:1;
+      font-variant-numeric:tabular-nums;letter-spacing:-1px;
+    }
+    .timer-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+    .timer-actions .btn{padding:8px 5px}
+    .btn:disabled,.route-btn:disabled{opacity:.45;cursor:not-allowed}
+    .best-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+    .time-card{border:1px solid var(--border);border-radius:11px;background:var(--card);padding:10px}
+    .best-value{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;margin:2px 0 7px}
+    .attempt-list{display:flex;flex-wrap:wrap;gap:5px;min-height:24px}
+    .attempt{
+      border-radius:999px;background:var(--chip);border:1px solid var(--border);
+      padding:4px 8px;font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;
+    }
+    .attempt.best{background:var(--accent-soft);border-color:transparent}
+    .pitch-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:9px}
+    .pitch-stat{background:var(--chip);border:1px solid var(--border);border-radius:11px;padding:9px;text-align:center}
+    .pitch-stat strong{display:block;font-size:25px;font-variant-numeric:tabular-nums}
+    .pitch-stat span{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase}
+    .pitch-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .pitch-action{min-height:58px;border-radius:11px;border:1px solid var(--border);font-size:17px;font-weight:900}
+    .pitch-action.ball{background:var(--card);color:var(--text)}
+    .pitch-action.strike{background:var(--accent);color:#fff;border-color:transparent}
+    @media (prefers-color-scheme: dark){.pitch-action.strike{color:#102015}}
+    .counter-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
     .nav{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:8px;margin-top:13px}
     .nav button{
       min-height:50px;border-radius:11px;border:1px solid var(--border);
@@ -110,6 +143,7 @@
       .tab{font-size:11px}
       .stars{gap:4px}.star{min-height:48px;font-size:22px}
       .twocol,.backup-grid{grid-template-columns:1fr}
+      .timer-display{font-size:42px}
       .roster-row{grid-template-columns:62px minmax(0,1fr) 58px}
     }
   </style>
@@ -179,9 +213,30 @@
           <div class="field"><div class="field-title">Pitching experience</div><div class="chips" data-single="pitchingExperience"></div></div>
           <div class="field"><div class="field-title">Catching experience</div><div class="chips" data-single="catchingExperience"></div></div>
           <div class="field">
-            <div class="twocol">
-              <div><label for="home1">Home → 1B time (sec)</label><input id="home1" inputmode="decimal" placeholder="4.62"></div>
-              <div><label for="home2">Home → 2B time (sec)</label><input id="home2" inputmode="decimal" placeholder="8.91"></div>
+            <div class="field-title">Sprint stopwatch</div>
+            <div class="tool-box">
+              <div class="route-toggle" aria-label="Timed route">
+                <button type="button" class="route-btn on" data-timer-route="home1">Home → 1B</button>
+                <button type="button" class="route-btn" data-timer-route="home2">Home → 2B</button>
+              </div>
+              <div id="timerDisplay" class="timer-display" aria-live="off">0.00</div>
+              <div class="timer-actions">
+                <button type="button" class="btn primary" id="timerStartStop">Start</button>
+                <button type="button" class="btn" id="timerReset" disabled>Reset</button>
+                <button type="button" class="btn" id="timerLog" disabled>Log Time</button>
+              </div>
+            </div>
+            <div class="best-grid">
+              <div class="time-card">
+                <label>Best Home → 1B</label>
+                <div id="home1Best" class="best-value">—</div>
+                <div id="home1Attempts" class="attempt-list"></div>
+              </div>
+              <div class="time-card">
+                <label>Best Home → 2B</label>
+                <div id="home2Best" class="best-value">—</div>
+                <div id="home2Attempts" class="attempt-list"></div>
+              </div>
             </div>
           </div>
           <div class="field" data-rating="athleticism">
@@ -204,9 +259,18 @@
 
           <div class="field">
             <div class="field-title">Pitching results</div>
-            <div class="twocol">
-              <div><label for="pitches">Pitches thrown</label><input id="pitches" inputmode="numeric" placeholder="10"></div>
-              <div><label for="strikes">Strikes</label><input id="strikes" inputmode="numeric" placeholder="7"></div>
+            <div class="pitch-stats" aria-live="polite">
+              <div class="pitch-stat"><strong id="pitchTotal">0</strong><span>Pitches</span></div>
+              <div class="pitch-stat"><strong id="strikeTotal">0</strong><span>Strikes</span></div>
+              <div class="pitch-stat"><strong id="ballTotal">0</strong><span>Balls</span></div>
+            </div>
+            <div class="pitch-actions">
+              <button type="button" class="pitch-action ball" id="addBall">+ Ball</button>
+              <button type="button" class="pitch-action strike" id="addStrike">+ Strike</button>
+            </div>
+            <div class="counter-tools">
+              <button type="button" class="btn" id="undoPitch" disabled>Undo Last Pitch</button>
+              <button type="button" class="btn danger" id="resetPitches" disabled>Reset Pitch Count</button>
             </div>
             <div id="strikePct" class="muted" style="margin-top:8px;font-weight:800"></div>
           </div>
@@ -248,22 +312,40 @@
 
   const blankPlayer=()=>({
     jersey:'',name:'',age:'',years:'',pastPositions:[],wantPositions:[],
-    pitchingExperience:'',catchingExperience:'',home1:'',home2:'',athleticism:0,
-    groundBalls:0,flyBalls:0,throwing:0,hitting:0,contact:0,pitches:'',strikes:'',
+    pitchingExperience:'',catchingExperience:'',home1:'',home2:'',home1Attempts:[],home2Attempts:[],athleticism:0,
+    groundBalls:0,flyBalls:0,throwing:0,hitting:0,contact:0,pitches:'',strikes:'',pitchLog:[],
     pitchVelocity:0,pitchMechanics:0,baseballIQ:0,coachability:0,confidence:'',notes:''
   });
 
   function defaultState(){
-    return {version:1,current:0,activeTab:'background',players:Array.from({length:12},blankPlayer)};
+    return {version:2,current:0,activeTab:'background',players:Array.from({length:12},blankPlayer)};
   }
 
   function sanitizePlayer(raw={}){
     const p=blankPlayer();
     Object.keys(p).forEach(k=>{
-      if(Array.isArray(p[k])) p[k]=Array.isArray(raw[k])?raw[k].filter(x=>positions.includes(x)):[];
+      if(k==='pastPositions'||k==='wantPositions') p[k]=Array.isArray(raw[k])?raw[k].filter(x=>positions.includes(x)):[];
+      else if(k==='home1Attempts'||k==='home2Attempts'){
+        p[k]=Array.isArray(raw[k])?raw[k].map(Number).filter(x=>Number.isFinite(x)&&x>0&&x<120).map(x=>Number(x.toFixed(2))):[];
+      }
+      else if(k==='pitchLog') p[k]=Array.isArray(raw[k])?raw[k].filter(x=>x==='ball'||x==='strike'):[];
       else if(typeof p[k]==='number') p[k]=Math.max(0,Math.min(5,Number(raw[k])||0));
       else p[k]=String(raw[k]??'');
     });
+    ['home1','home2'].forEach(key=>{
+      const attemptsKey=key+'Attempts';
+      const oldTime=Number(raw[key]);
+      if(!p[attemptsKey].length&&Number.isFinite(oldTime)&&oldTime>0&&oldTime<120){
+        p[attemptsKey].push(Number(oldTime.toFixed(2)));
+      }
+      p[key]=p[attemptsKey].length?Math.min(...p[attemptsKey]).toFixed(2):'';
+    });
+    if(!p.pitchLog.length){
+      const oldPitches=Math.max(0,Math.floor(Number(raw.pitches)||0));
+      const oldStrikes=Math.max(0,Math.min(oldPitches,Math.floor(Number(raw.strikes)||0)));
+      p.pitchLog=[...Array(oldStrikes).fill('strike'),...Array(oldPitches-oldStrikes).fill('ball')];
+    }
+    syncPitchTotals(p);
     return p;
   }
 
@@ -283,9 +365,60 @@
   }
 
   let state=loadState();
+  const timer={route:'home1',running:false,startedAt:0,elapsedMs:0,frame:0};
 
   const $=s=>document.querySelector(s);
   const $$=s=>Array.from(document.querySelectorAll(s));
+
+  function syncPitchTotals(p){
+    const log=Array.isArray(p.pitchLog)?p.pitchLog:[];
+    p.pitches=log.length?String(log.length):'';
+    p.strikes=log.length?String(log.filter(x=>x==='strike').length):'';
+  }
+
+  function timerElapsed(){
+    return timer.elapsedMs+(timer.running?performance.now()-timer.startedAt:0);
+  }
+
+  function updateTimerDisplay(){
+    const elapsed=timerElapsed();
+    $('#timerDisplay').textContent=(elapsed/1000).toFixed(2);
+    $('#timerStartStop').textContent=timer.running?'Stop':'Start';
+    $('#timerReset').disabled=!timer.running&&elapsed<=0;
+    $('#timerLog').disabled=timer.running||elapsed<10;
+    $$('[data-timer-route]').forEach(button=>{
+      button.classList.toggle('on',button.dataset.timerRoute===timer.route);
+      button.disabled=timer.running;
+    });
+  }
+
+  function timerTick(){
+    if(!timer.running)return;
+    updateTimerDisplay();
+    timer.frame=requestAnimationFrame(timerTick);
+  }
+
+  function resetTimer(){
+    if(timer.frame)cancelAnimationFrame(timer.frame);
+    timer.running=false;timer.startedAt=0;timer.elapsedMs=0;timer.frame=0;
+    updateTimerDisplay();
+  }
+
+  function renderAttempts(p,key){
+    const attempts=p[key+'Attempts']||[];
+    const best=attempts.length?Math.min(...attempts):null;
+    $('#'+key+'Best').textContent=best===null?'—':best.toFixed(2)+' sec';
+    const box=$('#'+key+'Attempts');box.innerHTML='';
+    if(!attempts.length){
+      const empty=document.createElement('span');empty.className='muted small';empty.textContent='No attempts yet';box.appendChild(empty);return;
+    }
+    attempts.forEach((time,index)=>{
+      const item=document.createElement('span');
+      item.className='attempt'+(time===best?' best':'');
+      item.textContent=(index+1)+': '+time.toFixed(2);
+      box.appendChild(item);
+    });
+  }
 
   function saveState(){
     try{
@@ -348,7 +481,7 @@
       const b=document.createElement('button');
       b.type='button';b.className='pbtn'+(i===state.current?' active':'');
       b.innerHTML='<div>'+(p.jersey?'#'+escapeAttr(p.jersey):'P'+(i+1))+'</div><div class="pname">'+escapeAttr(p.name||('Player '+(i+1)))+'</div>';
-      b.addEventListener('click',()=>{state.current=i;saveState();render();});
+      b.addEventListener('click',()=>{resetTimer();state.current=i;saveState();render();});
       bar.appendChild(b);
     });
   }
@@ -365,8 +498,8 @@
   function render(){
     const p=state.players[state.current];
     $('#jersey').value=p.jersey;$('#playerName').value=p.name;$('#age').value=p.age;
-    $('#home1').value=p.home1;$('#home2').value=p.home2;$('#pitches').value=p.pitches;
-    $('#strikes').value=p.strikes;$('#notes').value=p.notes;
+    $('#notes').value=p.notes;
+    renderAttempts(p,'home1');renderAttempts(p,'home2');
 
     $$('[data-rating]').forEach(field=>{
       const key=field.dataset.rating,val=Number(p[key]||0);
@@ -384,8 +517,11 @@
       box.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',(p[key]||[]).includes(b.dataset.value)));
     });
 
-    const pitches=Number(p.pitches),strikes=Number(p.strikes);
-    $('#strikePct').textContent=pitches>0?'Strike percentage: '+Math.round(Math.min(Math.max(strikes,0),pitches)/pitches*100)+'%':'';
+    const pitches=p.pitchLog.length,strikes=p.pitchLog.filter(x=>x==='strike').length;
+    $('#pitchTotal').textContent=String(pitches);$('#strikeTotal').textContent=String(strikes);
+    $('#ballTotal').textContent=String(pitches-strikes);
+    $('#strikePct').textContent=pitches>0?'Strike percentage: '+Math.round(strikes/pitches*100)+'%':'No pitches logged yet.';
+    $('#undoPitch').disabled=pitches===0;$('#resetPitches').disabled=pitches===0;
 
     const bgKeys=['years','pastPositions','wantPositions','pitchingExperience','catchingExperience','home1','home2','athleticism'];
     const skKeys=['groundBalls','flyBalls','throwing','hitting','contact','pitches','strikes','pitchVelocity','pitchMechanics'];
@@ -398,6 +534,7 @@
     $$('.section').forEach(s=>s.classList.toggle('active',s.id===state.activeTab));
 
     renderPlayers();
+    updateTimerDisplay();
     $('#status').textContent=(p.name||'Player '+(state.current+1))+' • autosaved locally';
   }
 
@@ -406,7 +543,6 @@
       state.players[state.current][key]=e.target.value;
       saveState();
       if(key==='name'||key==='jersey') renderPlayers();
-      if(key==='pitches'||key==='strikes') render();
     });
   }
 
@@ -426,9 +562,10 @@
   function exportCsv(){
     const headers=[
       'Jersey #','Name','Age','Years Played','Previous Positions','Positions They Want to Try',
-      'Pitching Experience','Catching Experience','Home to 1B (sec)','Home to 2B (sec)',
+      'Pitching Experience','Catching Experience','Best Home to 1B (sec)','Home to 1B Attempts',
+      'Best Home to 2B (sec)','Home to 2B Attempts',
       'Overall Athleticism (1-5)','Ground Ball / IF Fielding (1-5)','Fly Ball / OF Tracking (1-5)',
-      'Throwing (1-5)','Hitting (1-5)','Contact (1-5)','Pitching - Pitches','Pitching - Strikes',
+      'Throwing (1-5)','Hitting (1-5)','Contact (1-5)','Pitching - Pitches','Pitching - Strikes','Pitching - Balls',
       'Pitching - Strike %','Pitching Velocity (1-5)','Pitching Mechanics (1-5)',
       'Baseball IQ / Instincts (1-5)','Coachability / Effort (1-5)','Confidence / Comfort',
       'Notes / Observations'
@@ -438,8 +575,9 @@
       const pct=pi>0?(Math.min(Math.max(st,0),pi)/pi):'';
       return [
         p.jersey,p.name,p.age,p.years,p.pastPositions,p.wantPositions,p.pitchingExperience,
-        p.catchingExperience,p.home1,p.home2,p.athleticism,p.groundBalls,p.flyBalls,p.throwing,
-        p.hitting,p.contact,p.pitches,p.strikes,pct===''?'':Math.round(pct*100)+'%',
+        p.catchingExperience,p.home1,p.home1Attempts.map(x=>x.toFixed(2)),p.home2,
+        p.home2Attempts.map(x=>x.toFixed(2)),p.athleticism,p.groundBalls,p.flyBalls,p.throwing,
+        p.hitting,p.contact,p.pitches,p.strikes,pi-st,pct===''?'':Math.round(pct*100)+'%',
         p.pitchVelocity,p.pitchMechanics,p.baseballIQ,p.coachability,p.confidence,p.notes
       ].map(csvEscape).join(',');
     });
@@ -459,9 +597,46 @@
   buildChips();buildStars();
 
   [
-    ['#jersey','jersey'],['#playerName','name'],['#age','age'],['#home1','home1'],
-    ['#home2','home2'],['#pitches','pitches'],['#strikes','strikes'],['#notes','notes']
+    ['#jersey','jersey'],['#playerName','name'],['#age','age'],['#notes','notes']
   ].forEach(([a,b])=>bindInput(a,b));
+
+  $$('[data-timer-route]').forEach(button=>button.addEventListener('click',()=>{
+    if(timer.running)return;
+    timer.route=button.dataset.timerRoute;resetTimer();
+  }));
+
+  $('#timerStartStop').addEventListener('click',()=>{
+    if(timer.running){
+      timer.elapsedMs+=performance.now()-timer.startedAt;
+      timer.running=false;if(timer.frame)cancelAnimationFrame(timer.frame);timer.frame=0;
+      updateTimerDisplay();return;
+    }
+    timer.startedAt=performance.now();timer.running=true;timerTick();
+  });
+
+  $('#timerReset').addEventListener('click',resetTimer);
+  $('#timerLog').addEventListener('click',()=>{
+    const seconds=Number((timerElapsed()/1000).toFixed(2));
+    if(timer.running||seconds<=0)return;
+    const p=state.players[state.current],attemptsKey=timer.route+'Attempts';
+    p[attemptsKey].push(seconds);
+    p[timer.route]=Math.min(...p[attemptsKey]).toFixed(2);
+    saveState();resetTimer();render();
+  });
+
+  function addPitch(result){
+    const p=state.players[state.current];p.pitchLog.push(result);syncPitchTotals(p);saveState();render();
+  }
+  $('#addBall').addEventListener('click',()=>addPitch('ball'));
+  $('#addStrike').addEventListener('click',()=>addPitch('strike'));
+  $('#undoPitch').addEventListener('click',()=>{
+    const p=state.players[state.current];p.pitchLog.pop();syncPitchTotals(p);saveState();render();
+  });
+  $('#resetPitches').addEventListener('click',()=>{
+    if(confirm('Reset the pitch count for this player?')){
+      const p=state.players[state.current];p.pitchLog=[];syncPitchTotals(p);saveState();render();
+    }
+  });
 
   $$('[data-rating]').forEach(field=>field.addEventListener('click',e=>{
     const b=e.target.closest('.star');if(!b)return;
@@ -488,10 +663,11 @@
     state.activeTab=tab.dataset.tab;saveState();render();
   }));
 
-  $('#prev').addEventListener('click',()=>{state.current=(state.current+11)%12;saveState();render();});
-  $('#next').addEventListener('click',()=>{state.current=(state.current+1)%12;saveState();render();});
+  $('#prev').addEventListener('click',()=>{resetTimer();state.current=(state.current+11)%12;saveState();render();});
+  $('#next').addEventListener('click',()=>{resetTimer();state.current=(state.current+1)%12;saveState();render();});
 
   $('#clearPlayer').addEventListener('click',()=>{
+    resetTimer();
     const keep={jersey:state.players[state.current].jersey,name:state.players[state.current].name,age:state.players[state.current].age};
     state.players[state.current]=Object.assign(blankPlayer(),keep);
     saveState();render();
@@ -511,7 +687,7 @@
 
   $('#clearAll').addEventListener('click',()=>{
     if(confirm('Reset the entire roster and all evaluations? This cannot be undone unless you have a backup.')){
-      state=defaultState();saveState();renderRoster();render();
+      resetTimer();state=defaultState();saveState();renderRoster();render();
     }
   });
 
