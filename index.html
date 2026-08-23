@@ -9,12 +9,12 @@
     :root{
       --bg:#f4f6f2;--card:#ffffff;--text:#172018;--muted:#687268;--border:#d8ded8;
       --accent:#245f39;--accent-soft:#d9e8dd;--chip:#f8f9f8;--star:#f3c74b;
-      --danger:#9f2f2f;
+      --danger:#9f2f2f;--danger-fill:#b33a3a;
     }
     @media (prefers-color-scheme: dark){
       :root{
         --bg:#111511;--card:#181d18;--text:#eef3ee;--muted:#aab4aa;--border:#303730;
-        --accent:#79c78d;--accent-soft:#30523a;--chip:#202620;--danger:#e58b8b;
+        --accent:#79c78d;--accent-soft:#30523a;--chip:#202620;--danger:#e58b8b;--danger-fill:#c95757;
       }
     }
     *{box-sizing:border-box}
@@ -100,6 +100,7 @@
     }
     .timer-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
     .timer-actions .btn{padding:8px 5px}
+    .btn.stop{background:var(--danger-fill);color:#fff;border-color:transparent}
     .btn:disabled,.route-btn:disabled{opacity:.45;cursor:not-allowed}
     .best-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
     .time-card{border:1px solid var(--border);border-radius:11px;background:var(--card);padding:10px}
@@ -116,7 +117,7 @@
     .pitch-stat span{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase}
     .pitch-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .pitch-action{min-height:58px;border-radius:11px;border:1px solid var(--border);font-size:17px;font-weight:900}
-    .pitch-action.ball{background:var(--card);color:var(--text)}
+    .pitch-action.ball{background:var(--danger-fill);color:#fff;border-color:transparent}
     .pitch-action.strike{background:var(--accent);color:#fff;border-color:transparent}
     @media (prefers-color-scheme: dark){.pitch-action.strike{color:#102015}}
     .counter-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
@@ -384,6 +385,7 @@
     const elapsed=timerElapsed();
     $('#timerDisplay').textContent=(elapsed/1000).toFixed(2);
     $('#timerStartStop').textContent=timer.running?'Stop':'Start';
+    $('#timerStartStop').classList.toggle('stop',timer.running);
     $('#timerReset').disabled=!timer.running&&elapsed<=0;
     $('#timerLog').disabled=timer.running||elapsed<10;
     $$('[data-timer-route]').forEach(button=>{
