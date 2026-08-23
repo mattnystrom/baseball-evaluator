@@ -33,6 +33,10 @@
     .title{font-size:20px;font-weight:900;line-height:1.15}
     .muted{color:var(--muted);font-size:13px}
     .toolbar{display:flex;gap:7px;flex-wrap:wrap}
+    .evaluation-meta{
+      display:flex;align-items:end;justify-content:space-between;gap:14px;
+    }
+    .evaluation-meta .date-field{width:min(100%,240px)}
     .btn{
       min-height:44px;border:1px solid var(--border);background:var(--card);color:var(--text);
       border-radius:11px;padding:8px 12px;font-weight:800;
@@ -140,13 +144,13 @@
     @media (prefers-color-scheme: dark){
       .pbtn.active,.tab.active,.star.on,.chip.on,.route-btn.on{color:#102015}
     }
-    .nav{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:8px;margin-top:13px}
+    .nav{display:grid;grid-template-columns:1fr 1.3fr;gap:8px;margin-top:13px}
     .nav button{
       min-height:50px;border-radius:11px;border:1px solid var(--border);
       background:var(--card);color:var(--text);font-weight:850;
     }
-    .nav .next{background:var(--accent);color:#fff;border-color:transparent}
-    @media (prefers-color-scheme: dark){.nav .next{color:#102015}}
+    .nav .new-evaluation{background:var(--accent);color:#fff;border-color:transparent}
+    @media (prefers-color-scheme: dark){.nav .new-evaluation{color:#102015}}
     .status{text-align:center;padding:8px;font-size:12px;color:var(--muted)}
     .roster-table{display:grid;gap:8px}
     .roster-row{display:grid;grid-template-columns:70px minmax(0,1fr) 70px;gap:8px}
@@ -166,6 +170,8 @@
       .twocol,.backup-grid{grid-template-columns:1fr}
       .timer-display{font-size:42px}
       .roster-row{grid-template-columns:62px minmax(0,1fr) 58px}
+      .evaluation-meta{align-items:stretch;flex-direction:column}
+      .evaluation-meta .date-field{width:100%}
     }
   </style>
 </head>
@@ -207,37 +213,91 @@
     </section>
 
     <section id="evaluationView">
-      <div id="playerbar" class="playerbar" aria-label="Player selector"></div>
-
-      <div class="card">
-        <div class="identity">
-          <div><label for="jersey">Jersey #</label><input id="jersey" inputmode="numeric" placeholder="#"></div>
-          <div><label for="playerName">Name</label><input id="playerName" placeholder="Player name"></div>
-          <div><label for="age">Age</label><input id="age" inputmode="numeric" placeholder="13"></div>
+      <div class="card evaluation-meta">
+        <div class="date-field">
+          <label for="evaluationDate">Evaluation date</label>
+          <input id="evaluationDate" type="date">
         </div>
-        <div class="handedness">
-          <div><label>Throws</label><div class="chips throws" data-single="throws" aria-label="Throws"></div></div>
-          <div><label>Bats</label><div class="chips bats" data-single="bats" aria-label="Bats"></div></div>
-        </div>
+        <div class="muted">Choose the date for this evaluation and its exported files.</div>
       </div>
 
+      <div id="playerbar" class="playerbar" aria-label="Player selector"></div>
+
       <div class="tabs" role="tablist">
-        <button type="button" class="tab active" data-tab="background">Background & Athleticism<span id="backgroundCount">0 entered</span></button>
-        <button type="button" class="tab" data-tab="skills">Defense & Offense<span id="skillsCount">0 entered</span></button>
-        <button type="button" class="tab" data-tab="intangibles">Intangibles & Notes<span id="intangiblesCount">0 entered</span></button>
+        <button type="button" class="tab active" data-tab="background">Background<span id="backgroundCount">0 entered</span></button>
+        <button type="button" class="tab" data-tab="skills">Skills<span id="skillsCount">0 entered</span></button>
+        <button type="button" class="tab" data-tab="intangibles">Athlete Profile<span id="intangiblesCount">0 entered</span></button>
       </div>
 
       <section id="background" class="section active">
         <div class="card">
-          <div class="section-title">Background & Athleticism</div>
-          <div class="section-sub">Experience, positional history, running speed and general athletic profile.</div>
+          <div class="identity">
+            <div><label for="jersey">Jersey #</label><input id="jersey" inputmode="numeric" placeholder="#"></div>
+            <div><label for="playerName">Name</label><input id="playerName" placeholder="Player name"></div>
+            <div><label for="age">Age</label><input id="age" inputmode="numeric" placeholder="13"></div>
+          </div>
+          <div class="handedness">
+            <div><label>Throws</label><div class="chips throws" data-single="throws" aria-label="Throws"></div></div>
+            <div><label>Bats</label><div class="chips bats" data-single="bats" aria-label="Bats"></div></div>
+          </div>
+        </div>
 
-          <div class="group-title">Background</div>
+        <div class="card">
+          <div class="section-title">Background</div>
+          <div class="section-sub">Experience and positional history.</div>
+
           <div class="field"><div class="field-title">Years played</div><div class="chips" data-single="years"></div></div>
           <div class="field"><div class="field-title">Positions played previously</div><div class="chips" data-multi="pastPositions"></div></div>
           <div class="field"><div class="field-title">Positions they want to try</div><div class="chips" data-multi="wantPositions"></div></div>
           <div class="field"><div class="field-title">Pitching experience</div><div class="chips" data-single="pitchingExperience"></div></div>
           <div class="field"><div class="field-title">Catching experience</div><div class="chips" data-single="catchingExperience"></div></div>
+        </div>
+      </section>
+
+      <section id="skills" class="section">
+        <div class="card">
+          <div class="section-title">Skills</div>
+          <div class="section-sub">Rate observable baseball skills from 1–5.</div>
+
+          <div class="group-title">Defense</div>
+          <div class="field" data-rating="groundBalls"><div class="field-head"><div class="field-title" style="margin:0">Ground-ball / infield fielding</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="flyBalls"><div class="field-head"><div class="field-title" style="margin:0">Fly-ball / outfield tracking</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="throwingAccuracy"><div class="field-head"><div class="field-title" style="margin:0">Throwing accuracy</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="armStrength"><div class="field-head"><div class="field-title" style="margin:0">Arm strength</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+
+          <div class="group-title">Offense</div>
+          <div class="field" data-rating="swingMechanics"><div class="field-head"><div class="field-title" style="margin:0">Swing mechanics</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="contact"><div class="field-head"><div class="field-title" style="margin:0">Contact ability</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="power"><div class="field-head"><div class="field-title" style="margin:0">Power</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+
+          <div class="group-title">Pitching</div>
+          <div class="field">
+            <div class="field-title">Pitch counter</div>
+            <div class="pitch-stats" aria-live="polite">
+              <div class="pitch-stat"><strong id="pitchTotal">0</strong><span>Pitches</span></div>
+              <div class="pitch-stat"><strong id="strikeTotal">0</strong><span>Strikes</span></div>
+              <div class="pitch-stat"><strong id="ballTotal">0</strong><span>Balls</span></div>
+            </div>
+            <div class="pitch-actions">
+              <button type="button" class="pitch-action ball" id="addBall">+ Ball</button>
+              <button type="button" class="pitch-action strike" id="addStrike">+ Strike</button>
+            </div>
+            <div class="counter-tools">
+              <button type="button" class="btn" id="undoPitch" disabled>Undo Last Pitch</button>
+              <button type="button" class="btn danger" id="resetPitches" disabled>Reset Pitch Count</button>
+            </div>
+            <div id="strikePct" class="muted" style="margin-top:8px;font-weight:800"></div>
+          </div>
+          <div class="field" data-rating="pitchVelocity"><div class="field-head"><div class="field-title" style="margin:0">Pitching velocity</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="pitchMechanics"><div class="field-head"><div class="field-title" style="margin:0">Pitching mechanics / repeatability</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+        </div>
+      </section>
+
+      <section id="intangibles" class="section">
+        <div class="card">
+          <div class="section-title">Athlete Profile</div>
+          <div class="section-sub">Running speed, athletic profile and early impressions.</div>
+
           <div class="group-title">Athleticism</div>
           <div class="field">
             <div class="field-title">Sprint stopwatch</div>
@@ -270,64 +330,20 @@
             <div class="field-head"><div class="field-title" style="margin:0">Overall athleticism</div><div class="muted ratingLabel"></div></div>
             <div class="stars"></div>
           </div>
-        </div>
-      </section>
 
-      <section id="skills" class="section">
-        <div class="card">
-          <div class="section-title">Defense & Offense</div>
-          <div class="section-sub">Rate observable baseball skills from 1–5.</div>
-
-          <div class="group-title">Defense</div>
-          <div class="field" data-rating="groundBalls"><div class="field-head"><div class="field-title" style="margin:0">Ground-ball / infield fielding</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
-          <div class="field" data-rating="flyBalls"><div class="field-head"><div class="field-title" style="margin:0">Fly-ball / outfield tracking</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
-          <div class="field" data-rating="throwingAccuracy"><div class="field-head"><div class="field-title" style="margin:0">Throwing accuracy</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
-          <div class="field" data-rating="armStrength"><div class="field-head"><div class="field-title" style="margin:0">Arm strength</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
-
-          <div class="group-title">Offense</div>
-          <div class="field" data-rating="swingMechanics"><div class="field-head"><div class="field-title" style="margin:0">Swing mechanics</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
-          <div class="field" data-rating="contact"><div class="field-head"><div class="field-title" style="margin:0">Contact ability</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
-          <div class="field" data-rating="power"><div class="field-head"><div class="field-title" style="margin:0">Power</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
-
-          <div class="group-title">Pitching</div>
-          <div class="field">
-            <div class="field-title">Pitching results</div>
-            <div class="pitch-stats" aria-live="polite">
-              <div class="pitch-stat"><strong id="pitchTotal">0</strong><span>Pitches</span></div>
-              <div class="pitch-stat"><strong id="strikeTotal">0</strong><span>Strikes</span></div>
-              <div class="pitch-stat"><strong id="ballTotal">0</strong><span>Balls</span></div>
-            </div>
-            <div class="pitch-actions">
-              <button type="button" class="pitch-action ball" id="addBall">+ Ball</button>
-              <button type="button" class="pitch-action strike" id="addStrike">+ Strike</button>
-            </div>
-            <div class="counter-tools">
-              <button type="button" class="btn" id="undoPitch" disabled>Undo Last Pitch</button>
-              <button type="button" class="btn danger" id="resetPitches" disabled>Reset Pitch Count</button>
-            </div>
-            <div id="strikePct" class="muted" style="margin-top:8px;font-weight:800"></div>
-          </div>
-          <div class="field" data-rating="pitchVelocity"><div class="field-head"><div class="field-title" style="margin:0">Pitching velocity</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
-          <div class="field" data-rating="pitchMechanics"><div class="field-head"><div class="field-title" style="margin:0">Pitching mechanics / repeatability</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
-        </div>
-      </section>
-
-      <section id="intangibles" class="section">
-        <div class="card">
-          <div class="section-title">Intangibles & Notes</div>
-          <div class="section-sub">Early impressions only — these can change as you get to know the player.</div>
-
+          <div class="group-title">Intangibles</div>
           <div class="field" data-rating="baseballIQ"><div class="field-head"><div class="field-title" style="margin:0">Baseball IQ / instincts</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
           <div class="field" data-rating="coachability"><div class="field-head"><div class="field-title" style="margin:0">Coachability / effort</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
           <div class="field"><div class="field-title">Confidence / comfort</div><div class="chips" data-single="confidence"></div></div>
+
+          <div class="group-title">Notes</div>
           <div class="field"><label for="notes">Notes / observations</label><textarea id="notes" placeholder="Examples: aggressive, raw but athletic, quick hands, good communicator..."></textarea></div>
         </div>
       </section>
 
       <div class="nav">
-        <button id="prev" type="button">← Previous</button>
         <button id="clearPlayer" type="button">Clear Player</button>
-        <button id="next" class="next" type="button">Next Player →</button>
+        <button id="newEvaluation" class="new-evaluation" type="button">New Evaluation</button>
       </div>
       <div id="status" class="status" aria-live="polite"></div>
     </section>
@@ -343,6 +359,18 @@
   const years=['0','1','2','3','4','5+'];
   const ratingNames=['','Beginner','Developing','Competent','Strong','Standout'];
 
+  function todayLocalISO(){
+    const today=new Date();
+    const year=today.getFullYear();
+    const month=String(today.getMonth()+1).padStart(2,'0');
+    const day=String(today.getDate()).padStart(2,'0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function validDate(value){
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(value||''));
+  }
+
   const blankPlayer=()=>({
     jersey:'',name:'',age:'',throws:'',bats:'',years:'',pastPositions:[],wantPositions:[],
     pitchingExperience:'',catchingExperience:'',home1:'',home2:'',home1Attempts:[],home2Attempts:[],athleticism:0,
@@ -351,7 +379,19 @@
   });
 
   function defaultState(){
-    return {version:4,current:0,activeTab:'background',players:Array.from({length:12},blankPlayer)};
+    return {version:5,evaluationDate:todayLocalISO(),current:0,activeTab:'background',players:Array.from({length:12},blankPlayer)};
+  }
+
+  function playerForNewEvaluation(player){
+    const fresh=blankPlayer();
+    const preservedKeys=[
+      'jersey','name','age','throws','bats','years','pastPositions','wantPositions',
+      'pitchingExperience','catchingExperience'
+    ];
+    preservedKeys.forEach(key=>{
+      fresh[key]=Array.isArray(player[key])?[...player[key]]:player[key];
+    });
+    return fresh;
   }
 
   function sanitizePlayer(raw={}){
@@ -397,6 +437,7 @@
       if(Array.isArray(parsed.players)){
         st.players=Array.from({length:12},(_,i)=>sanitizePlayer(parsed.players[i]||{}));
       }
+      st.evaluationDate=validDate(parsed.evaluationDate)?parsed.evaluationDate:todayLocalISO();
       st.current=Math.max(0,Math.min(11,Number(parsed.current)||0));
       st.activeTab=['background','skills','intangibles'].includes(parsed.activeTab)?parsed.activeTab:'background';
       return st;
@@ -539,6 +580,7 @@
 
   function render(){
     const p=state.players[state.current];
+    $('#evaluationDate').value=state.evaluationDate;
     $('#jersey').value=p.jersey;$('#playerName').value=p.name;$('#age').value=p.age;
     $('#notes').value=p.notes;
     renderAttempts(p,'home1');renderAttempts(p,'home2');
@@ -565,9 +607,9 @@
     $('#strikePct').textContent=pitches>0?'Strike percentage: '+Math.round(strikes/pitches*100)+'%':'No pitches logged yet.';
     $('#undoPitch').disabled=pitches===0;$('#resetPitches').disabled=pitches===0;
 
-    const bgKeys=['throws','bats','years','pastPositions','wantPositions','pitchingExperience','catchingExperience','home1','home2','athleticism'];
+    const bgKeys=['throws','bats','years','pastPositions','wantPositions','pitchingExperience','catchingExperience'];
     const skKeys=['groundBalls','flyBalls','throwingAccuracy','armStrength','swingMechanics','contact','power','pitches','strikes','pitchVelocity','pitchMechanics'];
-    const inKeys=['baseballIQ','coachability','confidence','notes'];
+    const inKeys=['home1','home2','athleticism','baseballIQ','coachability','confidence','notes'];
     $('#backgroundCount').textContent=countGroup(bgKeys,p)+' of '+bgKeys.length+' entered';
     $('#skillsCount').textContent=countGroup(skKeys,p)+' of '+skKeys.length+' entered';
     $('#intangiblesCount').textContent=countGroup(inKeys,p)+' of '+inKeys.length+' entered';
@@ -597,11 +639,8 @@
   }
 
   function datedExportFilename(extension){
-    const today=new Date();
-    const year=today.getFullYear();
-    const month=String(today.getMonth()+1).padStart(2,'0');
-    const day=String(today.getDate()).padStart(2,'0');
-    return `player-evaluation-${year}-${month}-${day}.${extension}`;
+    const date=validDate(state.evaluationDate)?state.evaluationDate:todayLocalISO();
+    return `player-evaluation-${date}.${extension}`;
   }
 
   function csvEscape(v){
@@ -611,7 +650,7 @@
 
   function exportCsv(){
     const headers=[
-      'Jersey #','Name','Age','Throws','Bats','Years Played','Previous Positions','Positions They Want to Try',
+      'Evaluation Date','Jersey #','Name','Age','Throws','Bats','Years Played','Previous Positions','Positions They Want to Try',
       'Pitching Experience','Catching Experience','Best Home to 1B (sec)','Home to 1B Attempts',
       'Best Home to 2B (sec)','Home to 2B Attempts',
       'Overall Athleticism (1-5)','Ground Ball / IF Fielding (1-5)','Fly Ball / OF Tracking (1-5)',
@@ -624,7 +663,7 @@
       const pi=Number(p.pitches),st=Number(p.strikes);
       const pct=pi>0?(Math.min(Math.max(st,0),pi)/pi):'';
       return [
-        p.jersey,p.name,p.age,p.throws,p.bats,p.years,p.pastPositions,p.wantPositions,p.pitchingExperience,
+        state.evaluationDate,p.jersey,p.name,p.age,p.throws,p.bats,p.years,p.pastPositions,p.wantPositions,p.pitchingExperience,
         p.catchingExperience,p.home1,p.home1Attempts.map(x=>x.toFixed(2)),p.home2,
         p.home2Attempts.map(x=>x.toFixed(2)),p.athleticism,p.groundBalls,p.flyBalls,p.throwingAccuracy,
         p.armStrength,p.swingMechanics,p.contact,p.power,p.pitches,p.strikes,pi-st,pct===''?'':Math.round(pct*100)+'%',
@@ -649,6 +688,11 @@
   [
     ['#jersey','jersey'],['#playerName','name'],['#age','age'],['#notes','notes']
   ].forEach(([a,b])=>bindInput(a,b));
+
+  $('#evaluationDate').addEventListener('input',e=>{
+    state.evaluationDate=e.target.value;
+    saveState();
+  });
 
   $$('[data-timer-route]').forEach(button=>button.addEventListener('click',()=>{
     if(timer.running)return;
@@ -713,17 +757,26 @@
     state.activeTab=tab.dataset.tab;saveState();render();
   }));
 
-  $('#prev').addEventListener('click',()=>{resetTimer();state.current=(state.current+11)%12;saveState();render();});
-  $('#next').addEventListener('click',()=>{resetTimer();state.current=(state.current+1)%12;saveState();render();});
-
   $('#clearPlayer').addEventListener('click',()=>{
+    const p=state.players[state.current];
+    const playerLabel=p.name||('Player '+(state.current+1));
+    if(!confirm(`Clear ${playerLabel}'s evaluation and Background answers? Their name, age, jersey number, throws and bats will stay. This cannot be undone.`))return;
     resetTimer();
     const keep={
-      jersey:state.players[state.current].jersey,name:state.players[state.current].name,
-      age:state.players[state.current].age,throws:state.players[state.current].throws,bats:state.players[state.current].bats
+      jersey:p.jersey,name:p.name,age:p.age,throws:p.throws,bats:p.bats
     };
     state.players[state.current]=Object.assign(blankPlayer(),keep);
     saveState();render();
+  });
+
+  $('#newEvaluation').addEventListener('click',()=>{
+    if(!confirm('Start a new evaluation? Player identity and all Background answers will stay, but every player’s athleticism, skill results, intangibles and notes will be cleared. Export a backup first if you want to keep the current results.'))return;
+    resetTimer();
+    state.players=state.players.map(playerForNewEvaluation);
+    state.evaluationDate=todayLocalISO();
+    state.activeTab='background';
+    saveState();render();
+    $('#status').textContent='New evaluation started • roster and Background preserved';
   });
 
   $('#rosterBtn').addEventListener('click',()=>{
@@ -759,6 +812,7 @@
       if(!parsed||!Array.isArray(parsed.players)) throw new Error('Invalid backup');
       const restored=defaultState();
       restored.players=Array.from({length:12},(_,i)=>sanitizePlayer(parsed.players[i]||{}));
+      restored.evaluationDate=validDate(parsed.evaluationDate)?parsed.evaluationDate:todayLocalISO();
       restored.current=Math.max(0,Math.min(11,Number(parsed.current)||0));
       restored.activeTab=['background','skills','intangibles'].includes(parsed.activeTab)?parsed.activeTab:'background';
       state=restored;saveState();render();showBackupStatus('Backup restored successfully.');
