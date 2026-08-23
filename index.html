@@ -64,7 +64,7 @@
     .handedness .throws{grid-template-columns:repeat(2,1fr)}
     .handedness .bats{grid-template-columns:repeat(3,1fr)}
     .handedness .chip{border-radius:10px;padding:8px}
-    label{display:block;font-size:12px;font-weight:800;color:var(--muted);margin-bottom:5px}
+    label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px}
     input,textarea,select{
       width:100%;min-height:44px;border:1px solid var(--border);border-radius:10px;
       background:var(--card);color:var(--text);font-size:16px;padding:9px;
@@ -88,7 +88,7 @@
     .field + .group-title{margin-top:15px}
     .field{padding:12px 0;border-bottom:1px solid var(--border)}
     .field:last-child{border-bottom:0}
-    .field-title{font-size:16px;font-weight:850;margin-bottom:8px}
+    .field-title{font-size:16px;font-weight:600;margin-bottom:8px}
     .field-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
     .stars{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
     .star{
@@ -283,8 +283,11 @@
           <div class="field" data-rating="flyBalls"><div class="field-head"><div class="field-title" style="margin:0">Fly-ball / outfield tracking</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
           <div class="field" data-rating="throwingAccuracy"><div class="field-head"><div class="field-title" style="margin:0">Throwing accuracy</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
           <div class="field" data-rating="armStrength"><div class="field-head"><div class="field-title" style="margin:0">Arm strength</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
-          <div class="field" data-rating="hitting"><div class="field-head"><div class="field-title" style="margin:0">Hitting</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+
+          <div class="group-title">Offense</div>
+          <div class="field" data-rating="swingMechanics"><div class="field-head"><div class="field-title" style="margin:0">Swing mechanics</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
           <div class="field" data-rating="contact"><div class="field-head"><div class="field-title" style="margin:0">Contact ability</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="power"><div class="field-head"><div class="field-title" style="margin:0">Power</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
 
           <div class="group-title">Pitching</div>
           <div class="field">
@@ -343,12 +346,12 @@
   const blankPlayer=()=>({
     jersey:'',name:'',age:'',throws:'',bats:'',years:'',pastPositions:[],wantPositions:[],
     pitchingExperience:'',catchingExperience:'',home1:'',home2:'',home1Attempts:[],home2Attempts:[],athleticism:0,
-    groundBalls:0,flyBalls:0,throwingAccuracy:0,armStrength:0,hitting:0,contact:0,pitches:'',strikes:'',pitchLog:[],
+    groundBalls:0,flyBalls:0,throwingAccuracy:0,armStrength:0,swingMechanics:0,contact:0,power:0,pitches:'',strikes:'',pitchLog:[],
     pitchVelocity:0,pitchMechanics:0,baseballIQ:0,coachability:0,confidence:'',notes:''
   });
 
   function defaultState(){
-    return {version:3,current:0,activeTab:'background',players:Array.from({length:12},blankPlayer)};
+    return {version:4,current:0,activeTab:'background',players:Array.from({length:12},blankPlayer)};
   }
 
   function sanitizePlayer(raw={}){
@@ -377,6 +380,9 @@
     }
     if(!Number(raw.throwingAccuracy)&&Number(raw.throwing)>0){
       p.throwingAccuracy=Math.max(0,Math.min(5,Number(raw.throwing)||0));
+    }
+    if(!Number(raw.swingMechanics)&&Number(raw.hitting)>0){
+      p.swingMechanics=Math.max(0,Math.min(5,Number(raw.hitting)||0));
     }
     syncPitchTotals(p);
     return p;
@@ -560,7 +566,7 @@
     $('#undoPitch').disabled=pitches===0;$('#resetPitches').disabled=pitches===0;
 
     const bgKeys=['throws','bats','years','pastPositions','wantPositions','pitchingExperience','catchingExperience','home1','home2','athleticism'];
-    const skKeys=['groundBalls','flyBalls','throwingAccuracy','armStrength','hitting','contact','pitches','strikes','pitchVelocity','pitchMechanics'];
+    const skKeys=['groundBalls','flyBalls','throwingAccuracy','armStrength','swingMechanics','contact','power','pitches','strikes','pitchVelocity','pitchMechanics'];
     const inKeys=['baseballIQ','coachability','confidence','notes'];
     $('#backgroundCount').textContent=countGroup(bgKeys,p)+' of '+bgKeys.length+' entered';
     $('#skillsCount').textContent=countGroup(skKeys,p)+' of '+skKeys.length+' entered';
@@ -609,7 +615,7 @@
       'Pitching Experience','Catching Experience','Best Home to 1B (sec)','Home to 1B Attempts',
       'Best Home to 2B (sec)','Home to 2B Attempts',
       'Overall Athleticism (1-5)','Ground Ball / IF Fielding (1-5)','Fly Ball / OF Tracking (1-5)',
-      'Throwing Accuracy (1-5)','Arm Strength (1-5)','Hitting (1-5)','Contact (1-5)','Pitching - Pitches','Pitching - Strikes','Pitching - Balls',
+      'Throwing Accuracy (1-5)','Arm Strength (1-5)','Swing Mechanics (1-5)','Contact (1-5)','Power (1-5)','Pitching - Pitches','Pitching - Strikes','Pitching - Balls',
       'Pitching - Strike %','Pitching Velocity (1-5)','Pitching Mechanics (1-5)',
       'Baseball IQ / Instincts (1-5)','Coachability / Effort (1-5)','Confidence / Comfort',
       'Notes / Observations'
@@ -621,7 +627,7 @@
         p.jersey,p.name,p.age,p.throws,p.bats,p.years,p.pastPositions,p.wantPositions,p.pitchingExperience,
         p.catchingExperience,p.home1,p.home1Attempts.map(x=>x.toFixed(2)),p.home2,
         p.home2Attempts.map(x=>x.toFixed(2)),p.athleticism,p.groundBalls,p.flyBalls,p.throwingAccuracy,
-        p.armStrength,p.hitting,p.contact,p.pitches,p.strikes,pi-st,pct===''?'':Math.round(pct*100)+'%',
+        p.armStrength,p.swingMechanics,p.contact,p.power,p.pitches,p.strikes,pi-st,pct===''?'':Math.round(pct*100)+'%',
         p.pitchVelocity,p.pitchMechanics,p.baseballIQ,p.coachability,p.confidence,p.notes
       ].map(csvEscape).join(',');
     });
