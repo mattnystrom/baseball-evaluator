@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1f5f3b">
+  <title>Fall Ball Player Evaluator</title>
+  <style>
+    :root{
+      --bg:#f4f6f2;--card:#ffffff;--text:#172018;--muted:#687268;--border:#d8ded8;
+      --accent:#245f39;--accent-soft:#d9e8dd;--chip:#f8f9f8;--star:#f3c74b;
+      --danger:#9f2f2f;
+    }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#111511;--card:#181d18;--text:#eef3ee;--muted:#aab4aa;--border:#303730;
+        --accent:#79c78d;--accent-soft:#30523a;--chip:#202620;--danger:#e58b8b;
+      }
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      -webkit-text-size-adjust:100%;
+    }
+    button,input,textarea,select{font:inherit}
+    button{touch-action:manipulation}
+    .app{max-width:960px;margin:0 auto;padding:14px 14px 36px}
+    .topbar{
+      display:flex;gap:10px;justify-content:space-between;align-items:flex-end;
+      flex-wrap:wrap;margin-bottom:10px;
+    }
+    .title{font-size:20px;font-weight:900;line-height:1.15}
+    .muted{color:var(--muted);font-size:13px}
+    .toolbar{display:flex;gap:7px;flex-wrap:wrap}
+    .btn{
+      min-height:44px;border:1px solid var(--border);background:var(--card);color:var(--text);
+      border-radius:11px;padding:8px 12px;font-weight:800;
+    }
+    .btn.primary{background:var(--accent);color:#fff;border-color:transparent}
+    @media (prefers-color-scheme: dark){.btn.primary{color:#102015}}
+    .btn.danger{color:var(--danger)}
+    .card{
+      background:var(--card);border:1px solid var(--border);border-radius:15px;
+      padding:14px;margin-bottom:11px;
+    }
+    .hidden{display:none!important}
+    .playerbar{display:flex;gap:7px;overflow-x:auto;padding:4px 0 12px}
+    .pbtn{
+      min-width:74px;min-height:52px;border:1px solid var(--border);border-radius:12px;
+      background:var(--card);color:var(--text);font-weight:800;padding:6px 8px;
+    }
+    .pbtn.active{background:var(--accent);color:#fff;border-color:transparent}
+    @media (prefers-color-scheme: dark){.pbtn.active{color:#102015}}
+    .pname{font-size:11px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px}
+    .identity{display:grid;grid-template-columns:90px minmax(0,1fr) 85px;gap:9px}
+    label{display:block;font-size:12px;font-weight:800;color:var(--muted);margin-bottom:5px}
+    input,textarea,select{
+      width:100%;min-height:44px;border:1px solid var(--border);border-radius:10px;
+      background:var(--card);color:var(--text);font-size:16px;padding:9px;
+    }
+    textarea{min-height:90px;resize:vertical}
+    .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0}
+    .tab{
+      min-height:52px;border-radius:11px;border:1px solid var(--border);background:var(--chip);
+      color:var(--text);font-weight:850;font-size:13px;padding:5px;
+    }
+    .tab span{display:block;font-size:11px;font-weight:650;margin-top:2px;opacity:.75}
+    .tab.active{background:var(--accent-soft);border-color:transparent}
+    .section{display:none}.section.active{display:block}
+    .section-title{font-size:17px;font-weight:900;margin-bottom:2px}
+    .section-sub{font-size:12px;color:var(--muted);margin-bottom:8px}
+    .field{padding:12px 0;border-bottom:1px solid var(--border)}
+    .field:last-child{border-bottom:0}
+    .field-title{font-weight:850;margin-bottom:8px}
+    .field-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .stars{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+    .star{
+      min-height:50px;border-radius:10px;border:1px solid var(--border);background:var(--chip);
+      color:var(--muted);font-size:25px;line-height:1;
+    }
+    .star.on{background:var(--star);color:#2c260f;border-color:#daaF38}
+    .chips{display:flex;flex-wrap:wrap;gap:7px}
+    .chip{
+      min-height:44px;padding:8px 13px;border-radius:999px;border:1px solid var(--border);
+      background:var(--chip);color:var(--text);font-weight:800;
+    }
+    .chip.on{background:var(--accent-soft)}
+    .twocol{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .nav{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:8px;margin-top:13px}
+    .nav button{
+      min-height:50px;border-radius:11px;border:1px solid var(--border);
+      background:var(--card);color:var(--text);font-weight:850;
+    }
+    .nav .next{background:var(--accent);color:#fff;border-color:transparent}
+    @media (prefers-color-scheme: dark){.nav .next{color:#102015}}
+    .status{text-align:center;padding:8px;font-size:12px;color:var(--muted)}
+    .roster-table{display:grid;gap:8px}
+    .roster-row{display:grid;grid-template-columns:70px minmax(0,1fr) 70px;gap:8px}
+    .notice{
+      border:1px solid var(--border);background:var(--chip);border-radius:11px;padding:10px;
+      font-size:13px;color:var(--muted);margin:10px 0;
+    }
+    .backup-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .file-input{display:none}
+    .small{font-size:12px}
+    @media(max-width:560px){
+      .app{padding:10px 10px 30px}
+      .identity{grid-template-columns:74px minmax(0,1fr) 66px}
+      .tab{font-size:11px}
+      .stars{gap:4px}.star{min-height:48px;font-size:22px}
+      .twocol,.backup-grid{grid-template-columns:1fr}
+      .roster-row{grid-template-columns:62px minmax(0,1fr) 58px}
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div>
+        <div class="title">Fall Ball Player Evaluator</div>
+        <div class="muted">Autosaves on this device after every change.</div>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="rosterBtn" type="button">Roster Setup</button>
+        <button class="btn" id="backupBtn" type="button">Backup / Export</button>
+      </div>
+    </div>
+
+    <section id="rosterPanel" class="card hidden">
+      <div class="section-title">Roster Setup</div>
+      <div class="section-sub">Enter this once before practice. Evaluations stay attached to each roster slot.</div>
+      <div id="rosterRows" class="roster-table"></div>
+      <div class="notice">Tip: jersey number and age are optional. Names can be first name only if you prefer.</div>
+      <div class="toolbar">
+        <button class="btn primary" id="doneRoster" type="button">Done</button>
+        <button class="btn danger" id="clearAll" type="button">Reset All Data</button>
+      </div>
+    </section>
+
+    <section id="backupPanel" class="card hidden">
+      <div class="section-title">Backup & Export</div>
+      <div class="section-sub">CSV is best for Excel. JSON preserves the full app state for restoring later.</div>
+      <div class="backup-grid">
+        <button class="btn primary" id="exportCsv" type="button">Export CSV</button>
+        <button class="btn" id="exportJson" type="button">Download Backup</button>
+        <button class="btn" id="importJsonBtn" type="button">Restore Backup</button>
+        <button class="btn" id="closeBackup" type="button">Done</button>
+      </div>
+      <input id="importJson" class="file-input" type="file" accept=".json,application/json">
+      <div id="backupStatus" class="notice hidden"></div>
+    </section>
+
+    <section id="evaluationView">
+      <div id="playerbar" class="playerbar" aria-label="Player selector"></div>
+
+      <div class="card">
+        <div class="identity">
+          <div><label for="jersey">Jersey #</label><input id="jersey" inputmode="numeric" placeholder="#"></div>
+          <div><label for="playerName">Name</label><input id="playerName" placeholder="Player name"></div>
+          <div><label for="age">Age</label><input id="age" inputmode="numeric" placeholder="13"></div>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab active" data-tab="background">Background & Athleticism<span id="backgroundCount">0 entered</span></button>
+        <button type="button" class="tab" data-tab="skills">Defense & Offense<span id="skillsCount">0 entered</span></button>
+        <button type="button" class="tab" data-tab="intangibles">Intangibles & Notes<span id="intangiblesCount">0 entered</span></button>
+      </div>
+
+      <section id="background" class="section active">
+        <div class="card">
+          <div class="section-title">Background & Athleticism</div>
+          <div class="section-sub">Experience, positional history, running speed and general athletic profile.</div>
+
+          <div class="field"><div class="field-title">Years played</div><div class="chips" data-single="years"></div></div>
+          <div class="field"><div class="field-title">Positions played previously</div><div class="chips" data-multi="pastPositions"></div></div>
+          <div class="field"><div class="field-title">Positions they want to try</div><div class="chips" data-multi="wantPositions"></div></div>
+          <div class="field"><div class="field-title">Pitching experience</div><div class="chips" data-single="pitchingExperience"></div></div>
+          <div class="field"><div class="field-title">Catching experience</div><div class="chips" data-single="catchingExperience"></div></div>
+          <div class="field">
+            <div class="twocol">
+              <div><label for="home1">Home → 1B time (sec)</label><input id="home1" inputmode="decimal" placeholder="4.62"></div>
+              <div><label for="home2">Home → 2B time (sec)</label><input id="home2" inputmode="decimal" placeholder="8.91"></div>
+            </div>
+          </div>
+          <div class="field" data-rating="athleticism">
+            <div class="field-head"><div class="field-title" style="margin:0">Overall athleticism</div><div class="muted ratingLabel"></div></div>
+            <div class="stars"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="skills" class="section">
+        <div class="card">
+          <div class="section-title">Defense & Offense</div>
+          <div class="section-sub">Rate observable baseball skills from 1–5.</div>
+
+          <div class="field" data-rating="groundBalls"><div class="field-head"><div class="field-title" style="margin:0">Ground-ball / infield fielding</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="flyBalls"><div class="field-head"><div class="field-title" style="margin:0">Fly-ball / outfield tracking</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="throwing"><div class="field-head"><div class="field-title" style="margin:0">Throwing</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="hitting"><div class="field-head"><div class="field-title" style="margin:0">Hitting</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="contact"><div class="field-head"><div class="field-title" style="margin:0">Contact ability</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+
+          <div class="field">
+            <div class="field-title">Pitching results</div>
+            <div class="twocol">
+              <div><label for="pitches">Pitches thrown</label><input id="pitches" inputmode="numeric" placeholder="10"></div>
+              <div><label for="strikes">Strikes</label><input id="strikes" inputmode="numeric" placeholder="7"></div>
+            </div>
+            <div id="strikePct" class="muted" style="margin-top:8px;font-weight:800"></div>
+          </div>
+          <div class="field" data-rating="pitchVelocity"><div class="field-head"><div class="field-title" style="margin:0">Pitching velocity / arm strength</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="pitchMechanics"><div class="field-head"><div class="field-title" style="margin:0">Pitching mechanics / repeatability</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+        </div>
+      </section>
+
+      <section id="intangibles" class="section">
+        <div class="card">
+          <div class="section-title">Intangibles & Notes</div>
+          <div class="section-sub">Early impressions only — these can change as you get to know the player.</div>
+
+          <div class="field" data-rating="baseballIQ"><div class="field-head"><div class="field-title" style="margin:0">Baseball IQ / instincts</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field" data-rating="coachability"><div class="field-head"><div class="field-title" style="margin:0">Coachability / effort</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
+          <div class="field"><div class="field-title">Confidence / comfort</div><div class="chips" data-single="confidence"></div></div>
+          <div class="field"><label for="notes">Notes / observations</label><textarea id="notes" placeholder="Examples: aggressive, raw but athletic, quick hands, good communicator..."></textarea></div>
+        </div>
+      </section>
+
+      <div class="nav">
+        <button id="prev" type="button">← Previous</button>
+        <button id="clearPlayer" type="button">Clear Player</button>
+        <button id="next" class="next" type="button">Next Player →</button>
+      </div>
+      <div id="status" class="status" aria-live="polite"></div>
+    </section>
+  </main>
+
+<script>
+(()=>{
+  const STORAGE_KEY='fallBallEvaluator.v1';
+
+  const positions=['P','C','1B','2B','3B','SS','LF','CF','RF'];
+  const exp=['None','Some','Experienced','Interested'];
+  const confidence=['Uncomfortable','Developing','Comfortable','Confident'];
+  const years=['0','1','2','3','4','5+'];
+  const ratingNames=['','Beginner','Developing','Competent','Strong','Standout'];
+
+  const blankPlayer=()=>({
+    jersey:'',name:'',age:'',years:'',pastPositions:[],wantPositions:[],
+    pitchingExperience:'',catchingExperience:'',home1:'',home2:'',athleticism:0,
+    groundBalls:0,flyBalls:0,throwing:0,hitting:0,contact:0,pitches:'',strikes:'',
+    pitchVelocity:0,pitchMechanics:0,baseballIQ:0,coachability:0,confidence:'',notes:''
+  });
+
+  function defaultState(){
+    return {version:1,current:0,activeTab:'background',players:Array.from({length:12},blankPlayer)};
+  }
+
+  function sanitizePlayer(raw={}){
+    const p=blankPlayer();
+    Object.keys(p).forEach(k=>{
+      if(Array.isArray(p[k])) p[k]=Array.isArray(raw[k])?raw[k].filter(x=>positions.includes(x)):[];
+      else if(typeof p[k]==='number') p[k]=Math.max(0,Math.min(5,Number(raw[k])||0));
+      else p[k]=String(raw[k]??'');
+    });
+    return p;
+  }
+
+  function loadState(){
+    try{
+      const raw=localStorage.getItem(STORAGE_KEY);
+      if(!raw) return defaultState();
+      const parsed=JSON.parse(raw);
+      const st=defaultState();
+      if(Array.isArray(parsed.players)){
+        st.players=Array.from({length:12},(_,i)=>sanitizePlayer(parsed.players[i]||{}));
+      }
+      st.current=Math.max(0,Math.min(11,Number(parsed.current)||0));
+      st.activeTab=['background','skills','intangibles'].includes(parsed.activeTab)?parsed.activeTab:'background';
+      return st;
+    }catch(e){return defaultState();}
+  }
+
+  let state=loadState();
+
+  const $=s=>document.querySelector(s);
+  const $$=s=>Array.from(document.querySelectorAll(s));
+
+  function saveState(){
+    try{
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+      $('#status').textContent=(state.players[state.current].name||'Player '+(state.current+1))+' • saved';
+    }catch(e){
+      $('#status').textContent='Could not save locally on this browser.';
+    }
+  }
+
+  function buildChips(){
+    [
+      ["[data-single='years']",years],
+      ["[data-single='pitchingExperience']",exp],
+      ["[data-single='catchingExperience']",exp],
+      ["[data-single='confidence']",confidence],
+      ["[data-multi='pastPositions']",positions],
+      ["[data-multi='wantPositions']",positions]
+    ].forEach(([sel,vals])=>{
+      const box=$(sel);
+      vals.forEach(v=>{
+        const b=document.createElement('button');
+        b.type='button';b.className='chip';b.dataset.value=v;b.textContent=v;
+        box.appendChild(b);
+      });
+    });
+  }
+
+  function buildStars(){
+    $$('[data-rating]').forEach(field=>{
+      const box=field.querySelector('.stars');
+      for(let i=1;i<=5;i++){
+        const b=document.createElement('button');
+        b.type='button';b.className='star';b.dataset.value=String(i);b.textContent='★';
+        b.setAttribute('aria-label',i+' of 5');
+        box.appendChild(b);
+      }
+    });
+  }
+
+  function renderRoster(){
+    const wrap=$('#rosterRows');wrap.innerHTML='';
+    state.players.forEach((p,i)=>{
+      const row=document.createElement('div');row.className='roster-row';
+      row.innerHTML=`
+        <div><label>Jersey</label><input data-ridx="${i}" data-rkey="jersey" inputmode="numeric" value="${escapeAttr(p.jersey)}"></div>
+        <div><label>Player ${i+1}</label><input data-ridx="${i}" data-rkey="name" value="${escapeAttr(p.name)}" placeholder="Name"></div>
+        <div><label>Age</label><input data-ridx="${i}" data-rkey="age" inputmode="numeric" value="${escapeAttr(p.age)}" placeholder="13"></div>`;
+      wrap.appendChild(row);
+    });
+  }
+
+  function escapeAttr(s){
+    return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function renderPlayers(){
+    const bar=$('#playerbar');bar.innerHTML='';
+    state.players.forEach((p,i)=>{
+      const b=document.createElement('button');
+      b.type='button';b.className='pbtn'+(i===state.current?' active':'');
+      b.innerHTML='<div>'+(p.jersey?'#'+escapeAttr(p.jersey):'P'+(i+1))+'</div><div class="pname">'+escapeAttr(p.name||('Player '+(i+1)))+'</div>';
+      b.addEventListener('click',()=>{state.current=i;saveState();render();});
+      bar.appendChild(b);
+    });
+  }
+
+  function countGroup(keys,p){
+    return keys.reduce((n,k)=>{
+      const v=p[k];
+      if(Array.isArray(v)) return n+(v.length?1:0);
+      if(typeof v==='number') return n+(v>0?1:0);
+      return n+(String(v||'').trim()?1:0);
+    },0);
+  }
+
+  function render(){
+    const p=state.players[state.current];
+    $('#jersey').value=p.jersey;$('#playerName').value=p.name;$('#age').value=p.age;
+    $('#home1').value=p.home1;$('#home2').value=p.home2;$('#pitches').value=p.pitches;
+    $('#strikes').value=p.strikes;$('#notes').value=p.notes;
+
+    $$('[data-rating]').forEach(field=>{
+      const key=field.dataset.rating,val=Number(p[key]||0);
+      field.querySelectorAll('.star').forEach(b=>b.classList.toggle('on',Number(b.dataset.value)<=val));
+      field.querySelector('.ratingLabel').textContent=val?val+' · '+ratingNames[val]:'';
+    });
+
+    $$('[data-single]').forEach(box=>{
+      const key=box.dataset.single;
+      box.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',p[key]===b.dataset.value));
+    });
+
+    $$('[data-multi]').forEach(box=>{
+      const key=box.dataset.multi;
+      box.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',(p[key]||[]).includes(b.dataset.value)));
+    });
+
+    const pitches=Number(p.pitches),strikes=Number(p.strikes);
+    $('#strikePct').textContent=pitches>0?'Strike percentage: '+Math.round(Math.min(Math.max(strikes,0),pitches)/pitches*100)+'%':'';
+
+    const bgKeys=['years','pastPositions','wantPositions','pitchingExperience','catchingExperience','home1','home2','athleticism'];
+    const skKeys=['groundBalls','flyBalls','throwing','hitting','contact','pitches','strikes','pitchVelocity','pitchMechanics'];
+    const inKeys=['baseballIQ','coachability','confidence','notes'];
+    $('#backgroundCount').textContent=countGroup(bgKeys,p)+' of '+bgKeys.length+' entered';
+    $('#skillsCount').textContent=countGroup(skKeys,p)+' of '+skKeys.length+' entered';
+    $('#intangiblesCount').textContent=countGroup(inKeys,p)+' of '+inKeys.length+' entered';
+
+    $$('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===state.activeTab));
+    $$('.section').forEach(s=>s.classList.toggle('active',s.id===state.activeTab));
+
+    renderPlayers();
+    $('#status').textContent=(p.name||'Player '+(state.current+1))+' • autosaved locally';
+  }
+
+  function bindInput(id,key){
+    $(id).addEventListener('input',e=>{
+      state.players[state.current][key]=e.target.value;
+      saveState();
+      if(key==='name'||key==='jersey') renderPlayers();
+      if(key==='pitches'||key==='strikes') render();
+    });
+  }
+
+  function downloadFile(filename,content,type){
+    const blob=new Blob([content],{type});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+
+  function csvEscape(v){
+    const s=Array.isArray(v)?v.join('|'):String(v??'');
+    return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+  }
+
+  function exportCsv(){
+    const headers=[
+      'Jersey #','Name','Age','Years Played','Previous Positions','Positions They Want to Try',
+      'Pitching Experience','Catching Experience','Home to 1B (sec)','Home to 2B (sec)',
+      'Overall Athleticism (1-5)','Ground Ball / IF Fielding (1-5)','Fly Ball / OF Tracking (1-5)',
+      'Throwing (1-5)','Hitting (1-5)','Contact (1-5)','Pitching - Pitches','Pitching - Strikes',
+      'Pitching - Strike %','Pitching Velocity (1-5)','Pitching Mechanics (1-5)',
+      'Baseball IQ / Instincts (1-5)','Coachability / Effort (1-5)','Confidence / Comfort',
+      'Notes / Observations'
+    ];
+    const rows=state.players.map(p=>{
+      const pi=Number(p.pitches),st=Number(p.strikes);
+      const pct=pi>0?(Math.min(Math.max(st,0),pi)/pi):'';
+      return [
+        p.jersey,p.name,p.age,p.years,p.pastPositions,p.wantPositions,p.pitchingExperience,
+        p.catchingExperience,p.home1,p.home2,p.athleticism,p.groundBalls,p.flyBalls,p.throwing,
+        p.hitting,p.contact,p.pitches,p.strikes,pct===''?'':Math.round(pct*100)+'%',
+        p.pitchVelocity,p.pitchMechanics,p.baseballIQ,p.coachability,p.confidence,p.notes
+      ].map(csvEscape).join(',');
+    });
+    downloadFile('fall-ball-evaluations.csv',[headers.join(','),...rows].join('\n'),'text/csv;charset=utf-8');
+    showBackupStatus('CSV exported. You can open it directly in Excel.');
+  }
+
+  function exportJson(){
+    downloadFile('fall-ball-evaluator-backup.json',JSON.stringify(state,null,2),'application/json');
+    showBackupStatus('Backup downloaded.');
+  }
+
+  function showBackupStatus(msg){
+    const box=$('#backupStatus');box.textContent=msg;box.classList.remove('hidden');
+  }
+
+  buildChips();buildStars();
+
+  [
+    ['#jersey','jersey'],['#playerName','name'],['#age','age'],['#home1','home1'],
+    ['#home2','home2'],['#pitches','pitches'],['#strikes','strikes'],['#notes','notes']
+  ].forEach(([a,b])=>bindInput(a,b));
+
+  $$('[data-rating]').forEach(field=>field.addEventListener('click',e=>{
+    const b=e.target.closest('.star');if(!b)return;
+    const key=field.dataset.rating,val=Number(b.dataset.value);
+    state.players[state.current][key]=state.players[state.current][key]===val?0:val;
+    saveState();render();
+  }));
+
+  $$('[data-single]').forEach(box=>box.addEventListener('click',e=>{
+    const b=e.target.closest('.chip');if(!b)return;
+    const key=box.dataset.single;
+    state.players[state.current][key]=state.players[state.current][key]===b.dataset.value?'':b.dataset.value;
+    saveState();render();
+  }));
+
+  $$('[data-multi]').forEach(box=>box.addEventListener('click',e=>{
+    const b=e.target.closest('.chip');if(!b)return;
+    const key=box.dataset.multi,arr=state.players[state.current][key]||[],v=b.dataset.value;
+    state.players[state.current][key]=arr.includes(v)?arr.filter(x=>x!==v):[...arr,v];
+    saveState();render();
+  }));
+
+  $$('.tab').forEach(tab=>tab.addEventListener('click',()=>{
+    state.activeTab=tab.dataset.tab;saveState();render();
+  }));
+
+  $('#prev').addEventListener('click',()=>{state.current=(state.current+11)%12;saveState();render();});
+  $('#next').addEventListener('click',()=>{state.current=(state.current+1)%12;saveState();render();});
+
+  $('#clearPlayer').addEventListener('click',()=>{
+    const keep={jersey:state.players[state.current].jersey,name:state.players[state.current].name,age:state.players[state.current].age};
+    state.players[state.current]=Object.assign(blankPlayer(),keep);
+    saveState();render();
+  });
+
+  $('#rosterBtn').addEventListener('click',()=>{
+    renderRoster();$('#rosterPanel').classList.toggle('hidden');$('#backupPanel').classList.add('hidden');
+  });
+  $('#doneRoster').addEventListener('click',()=>{$('#rosterPanel').classList.add('hidden');render();});
+  $('#rosterRows').addEventListener('input',e=>{
+    const el=e.target;if(!el.matches('[data-ridx]'))return;
+    const idx=Number(el.dataset.ridx),key=el.dataset.rkey;
+    if(idx>=0&&idx<12&&['jersey','name','age'].includes(key)){
+      state.players[idx][key]=el.value;saveState();renderPlayers();
+    }
+  });
+
+  $('#clearAll').addEventListener('click',()=>{
+    if(confirm('Reset the entire roster and all evaluations? This cannot be undone unless you have a backup.')){
+      state=defaultState();saveState();renderRoster();render();
+    }
+  });
+
+  $('#backupBtn').addEventListener('click',()=>{
+    $('#backupPanel').classList.toggle('hidden');$('#rosterPanel').classList.add('hidden');
+  });
+  $('#closeBackup').addEventListener('click',()=>$('#backupPanel').classList.add('hidden'));
+  $('#exportCsv').addEventListener('click',exportCsv);
+  $('#exportJson').addEventListener('click',exportJson);
+  $('#importJsonBtn').addEventListener('click',()=>$('#importJson').click());
+
+  $('#importJson').addEventListener('change',async e=>{
+    const file=e.target.files&&e.target.files[0];if(!file)return;
+    try{
+      const parsed=JSON.parse(await file.text());
+      if(!parsed||!Array.isArray(parsed.players)) throw new Error('Invalid backup');
+      const restored=defaultState();
+      restored.players=Array.from({length:12},(_,i)=>sanitizePlayer(parsed.players[i]||{}));
+      restored.current=Math.max(0,Math.min(11,Number(parsed.current)||0));
+      restored.activeTab=['background','skills','intangibles'].includes(parsed.activeTab)?parsed.activeTab:'background';
+      state=restored;saveState();render();showBackupStatus('Backup restored successfully.');
+    }catch(err){
+      showBackupStatus('Could not restore that file. Please choose a backup created by this app.');
+    }finally{e.target.value='';}
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
