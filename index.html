@@ -35,8 +35,12 @@
     .toolbar{display:flex;gap:7px;flex-wrap:wrap}
     .evaluation-meta{
       display:flex;align-items:end;justify-content:space-between;gap:14px;
+      width:100%;min-width:0;max-width:100%;
     }
-    .evaluation-meta .date-field{width:min(100%,240px)}
+    .evaluation-meta .date-field{width:min(100%,240px);min-width:0;max-width:100%}
+    #evaluationDate{
+      display:block;width:100%;min-width:0;max-width:100%;padding-inline:0;
+    }
     .btn{
       min-height:44px;border:1px solid var(--border);background:var(--card);color:var(--text);
       border-radius:11px;padding:8px 12px;font-weight:800;
@@ -203,8 +207,8 @@
       <div class="section-title">Backup & Export</div>
       <div class="section-sub">CSV is best for Excel. JSON preserves the full app state for restoring later.</div>
       <div class="backup-grid">
-        <button class="btn primary" id="exportCsv" type="button">Export CSV</button>
-        <button class="btn" id="exportJson" type="button">Download Backup</button>
+        <button class="btn primary" id="exportCsv" type="button">Share / Export CSV</button>
+        <button class="btn" id="exportJson" type="button">Share / Save Backup</button>
         <button class="btn" id="importJsonBtn" type="button">Restore Backup</button>
         <button class="btn" id="closeBackup" type="button">Done</button>
       </div>
@@ -638,6 +642,32 @@
     setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
 
+  async function shareOrDownload(filename,content,type,sharedMessage,downloadedMessage){
+    let file=null;
+    let canShareFile=false;
+    try{
+      file=new File([content],filename,{type});
+      canShareFile=typeof navigator.share==='function'&&
+        typeof navigator.canShare==='function'&&navigator.canShare({files:[file]});
+    }catch(e){canShareFile=false;}
+
+    if(canShareFile){
+      try{
+        await navigator.share({files:[file]});
+        showBackupStatus(sharedMessage);
+        return;
+      }catch(error){
+        if(error&&error.name==='AbortError'){
+          showBackupStatus('Sharing cancelled. No file was downloaded.');
+          return;
+        }
+      }
+    }
+
+    downloadFile(filename,content,type);
+    showBackupStatus(downloadedMessage);
+  }
+
   function datedExportFilename(extension){
     const date=validDate(state.evaluationDate)?state.evaluationDate:todayLocalISO();
     return `player-evaluation-${date}.${extension}`;
@@ -648,7 +678,7 @@
     return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
   }
 
-  function exportCsv(){
+  async function exportCsv(){
     const headers=[
       'Evaluation Date','Jersey #','Name','Age','Throws','Bats','Years Played','Previous Positions','Positions They Want to Try',
       'Pitching Experience','Catching Experience','Best Home to 1B (sec)','Home to 1B Attempts',
@@ -670,13 +700,23 @@
         p.pitchVelocity,p.pitchMechanics,p.baseballIQ,p.coachability,p.confidence,p.notes
       ].map(csvEscape).join(',');
     });
-    downloadFile(datedExportFilename('csv'),[headers.join(','),...rows].join('\n'),'text/csv;charset=utf-8');
-    showBackupStatus('CSV exported. You can open it directly in Excel.');
+    await shareOrDownload(
+      datedExportFilename('csv'),
+      [headers.join(','),...rows].join('\n'),
+      'text/csv;charset=utf-8',
+      'CSV sent to the share sheet.',
+      'CSV downloaded. You can open it directly in Excel.'
+    );
   }
 
-  function exportJson(){
-    downloadFile(datedExportFilename('json'),JSON.stringify(state,null,2),'application/json');
-    showBackupStatus('Backup downloaded.');
+  async function exportJson(){
+    await shareOrDownload(
+      datedExportFilename('json'),
+      JSON.stringify(state,null,2),
+      'application/json',
+      'Backup sent to the share sheet.',
+      'Backup downloaded.'
+    );
   }
 
   function showBackupStatus(msg){
