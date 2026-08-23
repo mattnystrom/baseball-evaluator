@@ -53,6 +53,11 @@
     .pbtn.active{background:var(--accent);color:#fff;border-color:transparent}
     .pname{font-size:11px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px}
     .identity{display:grid;grid-template-columns:90px minmax(0,1fr) 85px;gap:9px}
+    .handedness{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .handedness .chips{display:grid}
+    .handedness .throws{grid-template-columns:repeat(2,1fr)}
+    .handedness .bats{grid-template-columns:repeat(3,1fr)}
+    .handedness .chip{border-radius:10px;padding:8px}
     label{display:block;font-size:12px;font-weight:800;color:var(--muted);margin-bottom:5px}
     input,textarea,select{
       width:100%;min-height:44px;border:1px solid var(--border);border-radius:10px;
@@ -143,6 +148,7 @@
     @media(max-width:560px){
       .app{padding:10px 10px 30px}
       .identity{grid-template-columns:74px minmax(0,1fr) 66px}
+      .handedness{gap:8px}
       .tab{font-size:11px}
       .stars{gap:4px}.star{min-height:48px;font-size:22px}
       .twocol,.backup-grid{grid-template-columns:1fr}
@@ -196,6 +202,10 @@
           <div><label for="jersey">Jersey #</label><input id="jersey" inputmode="numeric" placeholder="#"></div>
           <div><label for="playerName">Name</label><input id="playerName" placeholder="Player name"></div>
           <div><label for="age">Age</label><input id="age" inputmode="numeric" placeholder="13"></div>
+        </div>
+        <div class="handedness">
+          <div><label>Throws</label><div class="chips throws" data-single="throws" aria-label="Throws"></div></div>
+          <div><label>Bats</label><div class="chips bats" data-single="bats" aria-label="Bats"></div></div>
         </div>
       </div>
 
@@ -314,7 +324,7 @@
   const ratingNames=['','Beginner','Developing','Competent','Strong','Standout'];
 
   const blankPlayer=()=>({
-    jersey:'',name:'',age:'',years:'',pastPositions:[],wantPositions:[],
+    jersey:'',name:'',age:'',throws:'',bats:'',years:'',pastPositions:[],wantPositions:[],
     pitchingExperience:'',catchingExperience:'',home1:'',home2:'',home1Attempts:[],home2Attempts:[],athleticism:0,
     groundBalls:0,flyBalls:0,throwing:0,hitting:0,contact:0,pitches:'',strikes:'',pitchLog:[],
     pitchVelocity:0,pitchMechanics:0,baseballIQ:0,coachability:0,confidence:'',notes:''
@@ -439,6 +449,8 @@
       ["[data-single='pitchingExperience']",exp],
       ["[data-single='catchingExperience']",exp],
       ["[data-single='confidence']",confidence],
+      ["[data-single='throws']",['R','L']],
+      ["[data-single='bats']",['R','L','S']],
       ["[data-multi='pastPositions']",positions],
       ["[data-multi='wantPositions']",positions]
     ].forEach(([sel,vals])=>{
@@ -527,7 +539,7 @@
     $('#strikePct').textContent=pitches>0?'Strike percentage: '+Math.round(strikes/pitches*100)+'%':'No pitches logged yet.';
     $('#undoPitch').disabled=pitches===0;$('#resetPitches').disabled=pitches===0;
 
-    const bgKeys=['years','pastPositions','wantPositions','pitchingExperience','catchingExperience','home1','home2','athleticism'];
+    const bgKeys=['throws','bats','years','pastPositions','wantPositions','pitchingExperience','catchingExperience','home1','home2','athleticism'];
     const skKeys=['groundBalls','flyBalls','throwing','hitting','contact','pitches','strikes','pitchVelocity','pitchMechanics'];
     const inKeys=['baseballIQ','coachability','confidence','notes'];
     $('#backgroundCount').textContent=countGroup(bgKeys,p)+' of '+bgKeys.length+' entered';
@@ -565,7 +577,7 @@
 
   function exportCsv(){
     const headers=[
-      'Jersey #','Name','Age','Years Played','Previous Positions','Positions They Want to Try',
+      'Jersey #','Name','Age','Throws','Bats','Years Played','Previous Positions','Positions They Want to Try',
       'Pitching Experience','Catching Experience','Best Home to 1B (sec)','Home to 1B Attempts',
       'Best Home to 2B (sec)','Home to 2B Attempts',
       'Overall Athleticism (1-5)','Ground Ball / IF Fielding (1-5)','Fly Ball / OF Tracking (1-5)',
@@ -578,7 +590,7 @@
       const pi=Number(p.pitches),st=Number(p.strikes);
       const pct=pi>0?(Math.min(Math.max(st,0),pi)/pi):'';
       return [
-        p.jersey,p.name,p.age,p.years,p.pastPositions,p.wantPositions,p.pitchingExperience,
+        p.jersey,p.name,p.age,p.throws,p.bats,p.years,p.pastPositions,p.wantPositions,p.pitchingExperience,
         p.catchingExperience,p.home1,p.home1Attempts.map(x=>x.toFixed(2)),p.home2,
         p.home2Attempts.map(x=>x.toFixed(2)),p.athleticism,p.groundBalls,p.flyBalls,p.throwing,
         p.hitting,p.contact,p.pitches,p.strikes,pi-st,pct===''?'':Math.round(pct*100)+'%',
@@ -672,7 +684,10 @@
 
   $('#clearPlayer').addEventListener('click',()=>{
     resetTimer();
-    const keep={jersey:state.players[state.current].jersey,name:state.players[state.current].name,age:state.players[state.current].age};
+    const keep={
+      jersey:state.players[state.current].jersey,name:state.players[state.current].name,
+      age:state.players[state.current].age,throws:state.players[state.current].throws,bats:state.players[state.current].bats
+    };
     state.players[state.current]=Object.assign(blankPlayer(),keep);
     saveState();render();
   });
