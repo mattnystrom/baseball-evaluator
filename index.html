@@ -80,6 +80,12 @@
     .section{display:none}.section.active{display:block}
     .section-title{font-size:21px;font-weight:900;line-height:1.15;margin-bottom:3px}
     .section-sub{font-size:12px;color:var(--muted);margin-bottom:8px}
+    .group-title{
+      margin-top:9px;padding:10px 0 7px;border-bottom:2px solid var(--accent-soft);
+      color:var(--accent);font-size:18px;font-weight:900;line-height:1.2;
+    }
+    .section-sub + .group-title{margin-top:4px}
+    .field + .group-title{margin-top:15px}
     .field{padding:12px 0;border-bottom:1px solid var(--border)}
     .field:last-child{border-bottom:0}
     .field-title{font-size:16px;font-weight:850;margin-bottom:8px}
@@ -226,11 +232,13 @@
           <div class="section-title">Background & Athleticism</div>
           <div class="section-sub">Experience, positional history, running speed and general athletic profile.</div>
 
+          <div class="group-title">Background</div>
           <div class="field"><div class="field-title">Years played</div><div class="chips" data-single="years"></div></div>
           <div class="field"><div class="field-title">Positions played previously</div><div class="chips" data-multi="pastPositions"></div></div>
           <div class="field"><div class="field-title">Positions they want to try</div><div class="chips" data-multi="wantPositions"></div></div>
           <div class="field"><div class="field-title">Pitching experience</div><div class="chips" data-single="pitchingExperience"></div></div>
           <div class="field"><div class="field-title">Catching experience</div><div class="chips" data-single="catchingExperience"></div></div>
+          <div class="group-title">Athleticism</div>
           <div class="field">
             <div class="field-title">Sprint stopwatch</div>
             <div class="tool-box">
@@ -270,6 +278,7 @@
           <div class="section-title">Defense & Offense</div>
           <div class="section-sub">Rate observable baseball skills from 1–5.</div>
 
+          <div class="group-title">Defense</div>
           <div class="field" data-rating="groundBalls"><div class="field-head"><div class="field-title" style="margin:0">Ground-ball / infield fielding</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
           <div class="field" data-rating="flyBalls"><div class="field-head"><div class="field-title" style="margin:0">Fly-ball / outfield tracking</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
           <div class="field" data-rating="throwingAccuracy"><div class="field-head"><div class="field-title" style="margin:0">Throwing accuracy</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
@@ -277,6 +286,7 @@
           <div class="field" data-rating="hitting"><div class="field-head"><div class="field-title" style="margin:0">Hitting</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
           <div class="field" data-rating="contact"><div class="field-head"><div class="field-title" style="margin:0">Contact ability</div><div class="muted ratingLabel"></div></div><div class="stars"></div></div>
 
+          <div class="group-title">Pitching</div>
           <div class="field">
             <div class="field-title">Pitching results</div>
             <div class="pitch-stats" aria-live="polite">
